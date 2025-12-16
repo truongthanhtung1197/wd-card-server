@@ -17,7 +17,8 @@ export const dataSourceOptions = (): DataSourceOptions & SeederOptions => {
     entities: ['dist/**/*.entity{.ts,.js}'],
     migrations: ['dist/db/migrations/*{.ts,.js}'],
     seeds: ['dist/db/seeds/**/*{.ts,.js}'],
-    synchronize: false,
+    // Tạm bật synchronize để TypeORM tự tạo / cập nhật schema theo ERD mới
+    synchronize: true,
     seedTracking: false,
   };
 };

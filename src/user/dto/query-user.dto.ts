@@ -1,22 +1,17 @@
-import { IsEnum, IsOptional } from 'class-validator';
-import { ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
-import { PaginationQueryDto } from 'src/shared/dto/paginationQueryDto.dto';
-import { BaseQueryDto } from 'src/shared/dto/paginationQueryDto.dto';
-import { ROLE } from 'src/role/role.constant';
-import { Transform } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsOptional, IsPositive } from 'class-validator';
 
-export class QueryUserDto extends IntersectionType(
-  PaginationQueryDto,
-  BaseQueryDto,
-) {
-  @ApiPropertyOptional({
-    description: 'Filter user by role',
-    enum: ROLE,
-    type: [ROLE],
-    enumName: 'ROLE',
-  })
+export class QueryUserDto {
+  @ApiPropertyOptional({ default: 1 })
   @IsOptional()
-  @IsEnum(ROLE, { each: true })
-  @Transform(({ value }) => (typeof value === 'string' ? [value] : value))
-  role?: ROLE[];
+  @Type(() => Number)
+  @IsPositive()
+  page?: number = 1;
+
+  @ApiPropertyOptional({ default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsPositive()
+  limit?: number = 10;
 }

@@ -1,3 +1,0 @@
-export enum NOTIFICATION_TYPE {
-  MENTION = 'MENTION',
-}

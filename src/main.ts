@@ -72,16 +72,7 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') ?? 4002;
   app.getHttpServer().setTimeout(ms('2.5 hrs'));
 
-  // 👉 Bắt đầu tích hợp bull-board
-  const importQueue = app.get<Queue>('BullQueue_import-queue'); // tên tự sinh
-  const serverAdapter = new ExpressAdapter();
-  serverAdapter.setBasePath('/admin/queues');
-
-  createBullBoard({
-    queues: [new BullAdapter(importQueue)],
-    serverAdapter,
-  });
-  app.use('/admin/queues', serverAdapter.getRouter());
+  // 👉 Bull-board integration is disabled in current refactor
 
   await app.listen(port, '0.0.0.0');
 

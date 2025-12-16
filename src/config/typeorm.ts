@@ -11,11 +11,10 @@ const config = {
   username: 'root',
   password: 'root@1234',
   database: 'crm',
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['dist/db/migrations/*{.ts,.js}'],
-  seeds: ['dist/db/seeds/**/*.js'],
+  // Rely on autoLoadEntities + TypeOrmModule.forFeature instead of scanning all dist entities
   autoLoadEntities: true,
-  synchronize: false,
+  // Tạm thời bật synchronize để TypeORM tự tạo / cập nhật schema
+  synchronize: true,
 };
 
 export default registerAs('typeorm', () => config);

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -9,8 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { CreateClientUserDto } from 'src/auth/dto/create-client-user.dto';
-import { Role } from 'src/role/entities/role.entity';
-import { ROLE } from 'src/role/role.constant';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -21,33 +18,33 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
 
-  async validateUser(username: string, password: string) {
-    const user = await this.userService.findByUsername(username);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const userDetail = await this.userService.findOne(user.id);
-      const { password, ...result } = userDetail;
-      return result;
+  async validateUser(email: string, password: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Tài khoản không chính xác');
     }
 
-    if (user && !!user.lockedAt) {
-      throw new UnauthorizedException('Tài khoản đã bị khoá');
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('Mật khẩu không chính xác');
     }
-    throw new UnauthorizedException('Tài khoản hoặc mật khẩu không chính xác');
+
+    return user;
   }
 
   async login(body: { username: string; password: string }) {
     const { username, password } = body;
+    // Tạm coi username là email để tương thích với DTO cũ
     const user = await this.validateUser(username, password);
     const payload = {
-      username: user.username,
       sub: user.id,
-      roleId: user.roleId,
+      email: user.email,
     };
 
     return {
@@ -59,53 +56,37 @@ export class AuthService {
   async resetPassword({
     username,
     newPassword,
-    requesterId,
   }: {
     username: string;
     newPassword: string;
     requesterId: number;
   }) {
-    const requester = await this.userRepository.findOne({
-      where: { id: requesterId },
-      relations: ['role'],
-    });
-    if (requester?.role?.roleName !== ROLE.SUPER_ADMIN) {
-      throw new ForbiddenException(
-        'Bạn không có quyền thực hiện hành động này',
-      );
-    }
     const user = await this.userRepository.findOne({
-      where: { username },
+      where: { email: username },
     });
     if (!user) {
       throw new BadRequestException('Tài khoản không tồn tại');
     }
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.update(user.id, { password: newPasswordHash });
+    await this.userRepository.update(user.id, {
+      passwordHash: newPasswordHash,
+    });
     return {
       message: 'Mật khẩu đã được cập nhật thành công',
     };
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    const newUser = await this.userService.createClientUser(createUserDto);
-    return newUser;
+    return this.userService.create(createUserDto);
   }
 
   async createPartner(createUserDto: CreateClientUserDto) {
-    const partnerRole = await this.roleRepository.findOneBy({
-      roleName: ROLE.PARTNER,
-    });
-
-    if (!partnerRole) {
-      throw new BadRequestException('Thao tác thất bại');
-    }
-
-    const newUser = await this.userService.createClientUser({
-      ...createUserDto,
-      roleId: partnerRole.id,
-    });
-    return newUser;
+    const dto: CreateUserDto = {
+      email: createUserDto.email,
+      password: createUserDto.password,
+      status: undefined,
+    };
+    return this.userService.create(dto);
   }
 
   async getMe(requester: User) {

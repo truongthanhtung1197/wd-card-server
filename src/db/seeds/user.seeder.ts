@@ -20,14 +20,7 @@ export default class UserSeeder implements Seeder {
     dataSource: DataSource,
     factoryManager: SeederFactoryManager,
   ): Promise<any> {
-    const roleRepo = dataSource.getRepository(Role);
     const userRepo = dataSource.getRepository(User);
-
-    const role = await roleRepo.findOneBy({
-      roleName: ROLE.SUPER_ADMIN,
-    });
-
-    if (!role) return;
 
     const exists = await userRepo.findOneBy({
       email: 'superadmin@crm.69vn',
@@ -46,11 +39,10 @@ export default class UserSeeder implements Seeder {
       const passwordHash = await bcrypt.hash(plainPassword, 10);
 
       await userRepo.insert({
-        username: 'superAdmin',
         email: 'superadmin@crm.69vn',
-        password: passwordHash,
-        roleId: role.id,
-      });
+        passwordHash,
+        status: undefined,
+      } as any);
     }
   }
 }

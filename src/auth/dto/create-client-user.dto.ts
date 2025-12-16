@@ -1,13 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
-import { BANK_NAME } from 'src/shared/constants/common.constants';
 
 export class CreateClientUserDto {
   @ApiProperty({ example: 'John_Doe' })
@@ -50,11 +48,6 @@ export class CreateClientUserDto {
   @IsString()
   @IsOptional()
   bankNumber: string;
-
-  @ApiProperty({ example: BANK_NAME.Vietcombank })
-  @IsEnum(BANK_NAME)
-  @IsOptional()
-  bankName: BANK_NAME;
 
   @ApiProperty({ example: '' })
   @IsString()
