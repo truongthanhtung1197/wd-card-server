@@ -1,0 +1,106 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get source
+        uses: actions/checkout@v4
+
+      - name: Get Commit Info
+        id: commit_info
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B | tr '\n' ' ')
+          echo "COMMIT_MESSAGE=$COMMIT_MSG" >> $GITHUB_ENV
+
+      - name: 🔔 Notify start deploy
+        run: |
+          export TZ='Asia/Ho_Chi_Minh'
+          TIME=$(date +'%H:%M:%S %d-%m-%Y')
+          ACTOR="${{ github.actor }}"
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode=MarkdownV2 \
+          -d text="🚀 *Starting Deploy CRM Server*  🕐 Time: \`${TIME}\` 👤 Actor: \`${ACTOR}\` 📝 Commit: _${{ env.COMMIT_MESSAGE }}_"
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: ❌ Notify build failed
+        if: failure()
+        run: |
+          export TZ='Asia/Ho_Chi_Minh'
+          TIME=$(date +'%H:%M:%S %d-%m-%Y')
+          ACTOR="${{ github.actor }}"
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode=MarkdownV2 \
+          -d text="❌ *Build CRM Server Failed*  🕐 \`${TIME}\` 👤 \`${ACTOR}\` 📝 Commit: _${{ env.COMMIT_MESSAGE }}_"
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 22.14.0
+            node -v
+            yarn -v
+            cd /var/source_code/crm-server
+            git fetch origin
+            git reset --hard origin/main
+            git log -1 > git_commit.log
+            yarn install --frozen-lockfile 2>&1 | tee install.log
+            yarn build 2>&1 | tee build.log
+            if [ $? -eq 0 ] && [ -f "dist/main.js" ]; then
+              pm2 delete crm-server || true
+              pm2 start yarn --name crm-server -- start
+              pm2 save
+              npm run migration:run
+            else
+              echo "Build failed or dist/main.js missing, check logs"
+              cat git_commit.log
+              cat install.log
+              cat build.log
+              exit 1
+            fi
+
+      - name: ✅ Notify deploy success
+        run: |
+          export TZ='Asia/Ho_Chi_Minh'
+          TIME=$(date +'%H:%M:%S %d-%m-%Y')
+          ACTOR="${{ github.actor }}"
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode=MarkdownV2 \
+          -d text="✅ *Deploy CRM Server Successful*  🎉 CRM Server has been updated  🕐 \`${TIME}\` 👤 \`${ACTOR}\` 📝 Commit: _${{ env.COMMIT_MESSAGE }}_"
+
+      - name: ❌ Notify deploy failed
+        if: failure()
+        run: |
+          export TZ='Asia/Ho_Chi_Minh'
+          TIME=$(date +'%H:%M:%S %d-%m-%Y')
+          ACTOR="${{ github.actor }}"
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode=MarkdownV2 \
+          -d text="🚫 *Deploy CRM Server Failed*  🕐 \`${TIME}\` 👤 \`${ACTOR}\` 📝 Commit: _${{ env.COMMIT_MESSAGE }}_"
