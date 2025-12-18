@@ -32,6 +32,10 @@ export class SalesService extends AbstractTransactionService {
       userId: dto.userId,
       commissionPercent: dto.commissionPercent,
       status: dto.status,
+      fullName: dto.fullName,
+      bankName: dto.bankName,
+      bankNumber: dto.bankNumber,
+      phone: dto.phone,
     });
     return this.salesRepository.save(entity);
   }

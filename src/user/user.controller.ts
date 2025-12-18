@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,6 +16,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { USER_ROLE } from 'src/role/role.constant';
+import { User } from 'src/user/entities/user.entity';
+import { UserRoleService } from 'src/user-role/user-role.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,9 +29,13 @@ import { UserService } from './user.service';
 
 @ApiTags('Users')
 @ApiBearerAuth('jwt')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly userRoleService: UserRoleService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
@@ -51,8 +63,24 @@ export class UserController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user by ID' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.userService.update(+id, updateUserDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() currentUser: User,
+  ) {
+    // Get current user roles with role relation
+    const userRoles = await this.userRoleService.findAll({ page: 1, limit: 100 });
+    const currentUserRoles = userRoles.items
+      .filter((ur: any) => ur.userId === currentUser.id)
+      .map((ur: any) => ur.role?.roleName)
+      .filter((roleName): roleName is USER_ROLE => roleName !== undefined);
+
+    const user = await this.userService.update(
+      +id,
+      updateUserDto,
+      currentUserRoles,
+    );
+    return { data: user };
   }
 
   @Delete(':id')

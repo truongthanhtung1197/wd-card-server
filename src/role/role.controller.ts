@@ -1,17 +1,15 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { RoleService } from './role.service';
+import { Controller, Get } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RoleService } from './role.service';
 
 @ApiTags('Roles')
 @ApiBearerAuth('jwt')
 @Controller('roles')
-@UseGuards(JwtAuthGuard)
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 

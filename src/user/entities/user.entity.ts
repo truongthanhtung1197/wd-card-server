@@ -1,7 +1,8 @@
 import { Exclude, Expose } from 'class-transformer';
 import { BaseEntity } from 'src/shared/baseEntity.entity';
 import { USER_STATUS } from 'src/shared/constants/user.constant';
-import { Column, Entity } from 'typeorm';
+import { UserRole } from 'src/user-role/entities/user-role.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -10,20 +11,8 @@ export class User extends BaseEntity {
   email: string;
 
   @Expose()
-  @Column({ name: 'name' })
-  name: string;
-
-  @Expose()
-  @Column({ name: 'bank_name' })
-  bankName: string;
-
-  @Expose()
-  @Column({ name: 'bank_number' })
-  bankNumber: string;
-
-  @Expose()
   @Exclude()
-  @Column({ name: 'password_hash' })
+  @Column({ name: 'password_hash', nullable: true })
   passwordHash: string;
 
   @Expose()
@@ -33,4 +22,7 @@ export class User extends BaseEntity {
     default: USER_STATUS.ACTIVE,
   })
   status: USER_STATUS;
+
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  userRoles: UserRole[];
 }

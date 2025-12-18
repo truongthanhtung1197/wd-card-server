@@ -18,7 +18,7 @@ import {
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ROLE } from 'src/role/role.constant';
+import { USER_ROLE } from 'src/role/role.constant';
 import { CreatePackageDto } from './dto/create-package.dto';
 import { QueryPackageDto } from './dto/query-package.dto';
 import { UpdatePackageDto } from './dto/update-package.dto';
@@ -32,7 +32,7 @@ export class PackageController {
   constructor(private readonly packageService: PackageService) {}
 
   @Post()
-  @Roles(ROLE.SUPER_ADMIN, ROLE.MANAGER)
+  @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.MANAGER)
   @ApiOperation({ summary: 'Create package' })
   @ApiResponse({ status: 201, description: 'Package created successfully' })
   async create(@Body() dto: CreatePackageDto) {
@@ -41,7 +41,7 @@ export class PackageController {
   }
 
   @Get()
-  @Roles(ROLE.SUPER_ADMIN, ROLE.MANAGER)
+  @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.MANAGER)
   @ApiOperation({ summary: 'List packages' })
   @ApiResponse({ status: 200, description: 'List of packages' })
   async findAll(@Query() query: QueryPackageDto) {
@@ -49,7 +49,7 @@ export class PackageController {
   }
 
   @Get(':id')
-  @Roles(ROLE.SUPER_ADMIN, ROLE.MANAGER)
+  @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.MANAGER)
   @ApiOperation({ summary: 'Get package detail' })
   @ApiResponse({ status: 200, description: 'Package detail' })
   @ApiResponse({ status: 404, description: 'Package not found' })
@@ -59,7 +59,7 @@ export class PackageController {
   }
 
   @Patch(':id')
-  @Roles(ROLE.SUPER_ADMIN, ROLE.MANAGER)
+  @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.MANAGER)
   @ApiOperation({ summary: 'Update package' })
   async update(@Param('id') id: string, @Body() dto: UpdatePackageDto) {
     const data = await this.packageService.update(+id, dto);
@@ -67,11 +67,9 @@ export class PackageController {
   }
 
   @Delete(':id')
-  @Roles(ROLE.SUPER_ADMIN, ROLE.MANAGER)
+  @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.MANAGER)
   @ApiOperation({ summary: 'Delete package (soft delete)' })
   async remove(@Param('id') id: string) {
     return this.packageService.remove(+id);
   }
 }
-
-

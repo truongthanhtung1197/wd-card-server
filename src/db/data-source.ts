@@ -20,6 +20,7 @@ export const dataSourceOptions = (): DataSourceOptions & SeederOptions => {
     // Tạm bật synchronize để TypeORM tự tạo / cập nhật schema theo ERD mới
     synchronize: true,
     seedTracking: false,
+    timezone: '+00:00', // UTC timezone
   };
 };
 

@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ROLE } from 'src/role/role.constant';
-import { User } from 'src/user/entities/user.entity';
+import { USER_ROLE } from 'src/role/role.constant';
+import { UserRole } from 'src/user-role/entities/user-role.entity';
 import { Repository } from 'typeorm';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
@@ -10,15 +10,15 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @InjectRepository(User)
-    private readonly usersRepo: Repository<User>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const allowedRoles = this.reflector.getAllAndOverride<ROLE[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const allowedRoles = this.reflector.getAllAndOverride<USER_ROLE[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // If no roles are specified, allow access
     if (!allowedRoles || allowedRoles.length === 0) {
@@ -27,27 +27,25 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    if (!user) return false;
+    if (!user || !user.id) return false;
 
-    // Resolve role name from different possible shapes
-    let userRole: ROLE | undefined =
-      user?.role?.roleName || user?.roleName || user?.role;
+    // Fetch user roles from UserRole table with role relation
+    const userRoles = await this.userRoleRepository.find({
+      where: { userId: user.id },
+      relations: ['role'],
+    });
 
-    // If role is missing on request, fetch from DB
-    if (!userRole && user?.id) {
-      const dbUser = await this.usersRepo.findOne({
-        where: { id: Number(user.id) },
-        relations: ['role'],
-        select: ['id'],
-      });
-      userRole = (dbUser as any)?.role?.roleName as ROLE | undefined;
-    }
+    if (!userRoles || userRoles.length === 0) return false;
 
-    if (!userRole) return false;
+    // Extract roleName values from Role entities
+    const userRoleValues = userRoles
+      .map((ur) => ur.role?.roleName)
+      .filter((roleName): roleName is USER_ROLE => roleName !== undefined);
 
-    // Super admin bypass
-    if (userRole === ROLE.SUPER_ADMIN) return true;
+    // Super admin bypass - if user has SUPER_ADMIN role, allow access
+    if (userRoleValues.includes(USER_ROLE.SUPER_ADMIN)) return true;
 
-    return allowedRoles.includes(userRole as ROLE);
+    // Check if user has any of the allowed roles
+    return userRoleValues.some((role) => allowedRoles.includes(role));
   }
 }

@@ -1,24 +1,21 @@
-import { createBullBoard } from '@bull-board/api';
-import { BullAdapter } from '@bull-board/api/bullAdapter';
-import { ExpressAdapter } from '@bull-board/express';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder } from '@nestjs/swagger';
-import { Queue } from 'bull';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { urlencoded } from 'express';
 import ms from 'ms';
 import { join } from 'path';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('CRM')
-    .setDescription('Tài liệu API cho hệ thống quản lý dịch vụ & đơn hàng CRM')
+    .setTitle('Wedding CRM')
+    .setDescription('Wedding CRM')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -33,17 +30,17 @@ async function bootstrap() {
     .addServer('api/v1')
     .build();
 
-  // const document = SwaggerModule.createDocument(app, config, {
-  //   ignoreGlobalPrefix: false,
-  // });
-  // SwaggerModule.setup('api-docs', app, document, {
-  //   swaggerOptions: {
-  //     persistAuthorization: false,
-  //     tryItOutEnabled: true,
-  //     cache: false,
-  //     url: `/api-docs-json?v=${Date.now()}`,
-  //   },
-  // });
+  const document = SwaggerModule.createDocument(app, config, {
+    ignoreGlobalPrefix: false,
+  });
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: false,
+      tryItOutEnabled: true,
+      cache: false,
+      url: `/api-docs-json?v=${Date.now()}`,
+    },
+  });
 
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.enableCors({
@@ -60,6 +57,9 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
   app.useStaticAssets(join(__dirname, '..', 'public/images'), {
@@ -67,7 +67,7 @@ async function bootstrap() {
   });
   app.setGlobalPrefix('api/v1');
   const reflector = app.get(Reflector);
-  // app.useGlobalGuards(new JwtAuthGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 4002;
   app.getHttpServer().setTimeout(ms('2.5 hrs'));

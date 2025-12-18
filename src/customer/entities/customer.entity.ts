@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
-import { BaseEntity } from 'src/shared/baseEntity.entity';
 import { Sales } from 'src/sales/entities/sales.entity';
+import { BaseEntity } from 'src/shared/baseEntity.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
@@ -30,5 +30,3 @@ export class Customer extends BaseEntity {
   @JoinColumn({ name: 'sale_id' })
   sale: Sales | null;
 }
-
-

@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
-import { User } from 'src/user/entities/user.entity';
+import { Role } from 'src/role/entities/role.entity';
 import { BaseEntity } from 'src/shared/baseEntity.entity';
-import { ROLE } from 'src/role/role.constant';
+import { User } from 'src/user/entities/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('user_roles')
@@ -11,16 +11,15 @@ export class UserRole extends BaseEntity {
   userId: number;
 
   @Expose()
+  @Column({ name: 'role_id' })
+  roleId: number;
+
+  @Expose()
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Expose()
-  @Column({
-    type: 'enum',
-    enum: ROLE,
-  })
-  role: ROLE;
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 }
-
-

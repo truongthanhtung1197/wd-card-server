@@ -1,7 +1,7 @@
-import { Seeder, SeederFactoryManager } from 'typeorm-extension';
-import { DataSource } from 'typeorm';
-import { ROLE } from 'src/role/role.constant';
 import { Role } from 'src/role/entities/role.entity';
+import { USER_ROLE } from 'src/role/role.constant';
+import { DataSource } from 'typeorm';
+import { Seeder, SeederFactoryManager } from 'typeorm-extension';
 
 export default class RoleSeeder implements Seeder {
   /**
@@ -16,7 +16,7 @@ export default class RoleSeeder implements Seeder {
     factoryManager: SeederFactoryManager,
   ): Promise<any> {
     const repository = dataSource.getRepository(Role);
-    const roles = Object.values(ROLE).map((role) => ({
+    const roles = Object.values(USER_ROLE).map((role) => ({
       roleName: role,
     }));
     await repository.upsert(roles, ['roleName']);

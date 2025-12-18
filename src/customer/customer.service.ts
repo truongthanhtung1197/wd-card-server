@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { AbstractTransactionService } from 'src/shared/services/abstract-transaction.service';
 import { Sales } from 'src/sales/entities/sales.entity';
+import { AbstractTransactionService } from 'src/shared/services/abstract-transaction.service';
 import { User } from 'src/user/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -122,5 +122,3 @@ export class CustomerService extends AbstractTransactionService {
     return { success: true };
   }
 }
-
-

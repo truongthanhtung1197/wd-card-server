@@ -15,6 +15,7 @@ const config = {
   autoLoadEntities: true,
   // Tạm thời bật synchronize để TypeORM tự tạo / cập nhật schema
   synchronize: true,
+  timezone: '+00:00', // UTC timezone
 };
 
 export default registerAs('typeorm', () => config);

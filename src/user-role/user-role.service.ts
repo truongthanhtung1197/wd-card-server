@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { AbstractTransactionService } from 'src/shared/services/abstract-transaction.service';
+import { Role } from 'src/role/entities/role.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
@@ -16,6 +17,8 @@ export class UserRoleService extends AbstractTransactionService {
     private readonly userRoleRepository: Repository<UserRole>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {
     super(dataSource);
   }
@@ -28,16 +31,23 @@ export class UserRoleService extends AbstractTransactionService {
       throw new NotFoundException('User not found');
     }
 
+    const role = await this.roleRepository.findOne({
+      where: { id: dto.roleId },
+    });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
     const userRole = this.userRoleRepository.create({
       userId: dto.userId,
-      role: dto.role,
+      roleId: dto.roleId,
     });
     return this.userRoleRepository.save(userRole);
   }
 
   async findAll({ page = 1, limit = 10 }: QueryUserRoleDto) {
     const [items, total] = await this.userRoleRepository.findAndCount({
-      relations: ['user'],
+      relations: ['user', 'role'],
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -49,7 +59,7 @@ export class UserRoleService extends AbstractTransactionService {
   async findOne(id: number) {
     const userRole = await this.userRoleRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'role'],
     });
     if (!userRole) {
       throw new NotFoundException('UserRole not found');
@@ -73,8 +83,14 @@ export class UserRoleService extends AbstractTransactionService {
       userRole.userId = dto.userId;
     }
 
-    if (dto.role) {
-      userRole.role = dto.role;
+    if (dto.roleId) {
+      const role = await this.roleRepository.findOne({
+        where: { id: dto.roleId },
+      });
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+      userRole.roleId = dto.roleId;
     }
 
     return this.userRoleRepository.save(userRole);

@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
+import { PackageFeature } from 'src/package-feature/entities/package-feature.entity';
 import { BaseEntity } from 'src/shared/baseEntity.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { PackageFeature } from 'src/package-feature/entities/package-feature.entity';
 
 export enum PACKAGE_STATUS {
   ACTIVE = 'ACTIVE',
@@ -27,10 +27,6 @@ export class Package extends BaseEntity {
   durationDays: number;
 
   @Expose()
-  @Column({ name: 'max_weddings', type: 'int' })
-  maxWeddings: number;
-
-  @Expose()
   @Column({
     type: 'enum',
     enum: PACKAGE_STATUS,
@@ -41,5 +37,3 @@ export class Package extends BaseEntity {
   @OneToMany(() => PackageFeature, (feature) => feature.package)
   features: PackageFeature[];
 }
-
-

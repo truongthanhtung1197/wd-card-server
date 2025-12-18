@@ -1,26 +1,19 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
   MinLength,
 } from 'class-validator';
 
 export class CreateClientUserDto {
-  @ApiProperty({ example: 'John_Doe' })
-  @IsString()
-  @IsNotEmpty()
-  username: string;
-
-  @ApiPropertyOptional({ example: 'John Doe' })
-  @IsString()
-  @IsOptional()
-  displayName: string;
-
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
-  @IsOptional()
+  @IsNotEmpty()
   email: string;
 
   @ApiProperty({ example: 'password123' })
@@ -29,28 +22,50 @@ export class CreateClientUserDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiProperty({ example: '@zorro' })
-  @IsString()
-  @IsOptional()
-  telegramUsername: string;
+  @ApiProperty({
+    example: 1,
+    description: 'Role ID from roles table',
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  roleId: number;
 
-  @ApiProperty({ example: '0909090909' })
+  // Fields for CUSTOMER role (optional, will be validated in service based on roleId)
+  @ApiProperty({ example: 'John Doe', required: false })
   @IsString()
   @IsOptional()
-  phone: string;
+  fullName?: string;
 
-  @ApiProperty({ example: 'Trung Tuyen' })
+  @ApiProperty({ example: '1234567890', required: false })
   @IsString()
   @IsOptional()
-  bankNameInCard: string;
+  phone?: string;
 
-  @ApiProperty({ example: '1234567890' })
-  @IsString()
+  // Fields for SALES role (optional, will be validated in service based on roleId)
+  @ApiProperty({ example: 10.5, required: false })
+  @IsNumber()
   @IsOptional()
-  bankNumber: string;
+  @Min(0)
+  @Max(100)
+  commissionPercent?: number;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: 'John Doe', required: false })
   @IsString()
   @IsOptional()
-  usdt: string;
+  salesFullName?: string;
+
+  @ApiProperty({ example: 'Bank of America', required: false })
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
+  @ApiProperty({ example: '1234567890', required: false })
+  @IsString()
+  @IsOptional()
+  bankNumber?: string;
+
+  @ApiProperty({ example: '1234567890', required: false })
+  @IsString()
+  @IsOptional()
+  salesPhone?: string;
 }

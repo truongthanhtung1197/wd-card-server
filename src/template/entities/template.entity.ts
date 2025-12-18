@@ -1,11 +1,11 @@
 import { Expose } from 'class-transformer';
 import { BaseEntity } from 'src/shared/baseEntity.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
 import { TemplateField } from 'src/template-field/entities/template-field.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 export enum TEMPLATE_STATUS {
+  DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
 }
 
 @Entity('templates')
@@ -22,12 +22,10 @@ export class Template extends BaseEntity {
   @Column({
     type: 'enum',
     enum: TEMPLATE_STATUS,
-    default: TEMPLATE_STATUS.ACTIVE,
+    default: TEMPLATE_STATUS.DRAFT,
   })
   status: TEMPLATE_STATUS;
 
   @OneToMany(() => TemplateField, (field) => field.template)
   fields: TemplateField[];
 }
-
-

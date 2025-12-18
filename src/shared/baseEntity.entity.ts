@@ -10,7 +10,7 @@ import {
 @Entity()
 export class BaseEntity {
   @Expose()
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
   @Expose()
@@ -25,7 +25,7 @@ export class BaseEntity {
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
-    nullable: true,
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt: Date;
 
@@ -36,4 +36,16 @@ export class BaseEntity {
     nullable: true,
   })
   deletedAt: Date;
+
+  @Expose()
+  @Column({ name: 'created_by', type: 'bigint', nullable: false })
+  createdBy: number;
+
+  @Expose()
+  @Column({ name: 'updated_by', type: 'bigint', nullable: false })
+  updatedBy: number;
+
+  @Expose()
+  @Column({ name: 'deleted_by', type: 'bigint', nullable: true })
+  deletedBy: number;
 }

@@ -29,9 +29,7 @@ erDiagram
         varchar password_hash
         enum status
         datetime created_at
-        name
-        bank_name
-        bank_number
+
     }
 
     USER_ROLES {
@@ -45,6 +43,9 @@ erDiagram
         bigint user_id FK
         decimal commission_percent
         enum status
+        full_name
+        bank_name
+        bank_number
     }
 
     CUSTOMERS {
@@ -61,7 +62,6 @@ erDiagram
         varchar name
         decimal price
         int duration_days
-        int max_weddings
         enum status
     }
 
@@ -69,6 +69,7 @@ erDiagram
         bigint id PK
         bigint package_id FK
         varchar feature_key
+        varchar feature_description
         varchar feature_value
     }
 
@@ -81,6 +82,7 @@ erDiagram
         date start_at
         date end_at
         enum status
+        payment_status
     }
 
     TEMPLATES {

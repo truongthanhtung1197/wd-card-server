@@ -22,5 +22,3 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   phone: string;
 }
-
-
